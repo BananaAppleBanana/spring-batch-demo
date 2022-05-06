@@ -5,27 +5,30 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
+import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-public class CSVItemWriter<T> implements ItemWriter<T> {
-    private Resource resource;
+public class CSVItemWriter<T> extends FlatFileItemWriter<T> {
 
-    private StepExecution stepExecution;
-
-    @BeforeStep
-    public void beforeStep(StepExecution stepExecution) {
-        this.stepExecution = stepExecution;
+    public CSVItemWriter(Resource resource) {
+        setResource(resource);
+        setLineAggregator(getDelimitedLineAggregator());
+        this.setHeaderCallback(w -> w.write("col1/col2/col3"));
     }
 
-    public void setResource(Resource resource) {
-        this.resource = resource;
-    }
+    public DelimitedLineAggregator<T> getDelimitedLineAggregator() {
+        BeanWrapperFieldExtractor<T> beanWrapperFieldExtractor = new BeanWrapperFieldExtractor<>();
+        beanWrapperFieldExtractor.setNames(new String[] {"id", "firstName", "lastName"});
 
-    @Override
-    public void write(List<? extends T> list) throws Exception {
-        System.out.println(list + ": " + Thread.currentThread() + "----" + stepExecution);
-//        System.out.println(stepExecution);
+        DelimitedLineAggregator<T> delimitedLineAggregator = new DelimitedLineAggregator<>();
+        delimitedLineAggregator.setDelimiter("/");
+        delimitedLineAggregator.setFieldExtractor(beanWrapperFieldExtractor);
+        return delimitedLineAggregator;
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
@@ -112,10 +113,9 @@ public class SpringBatchPartitionConfig {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public CSVItemWriter itemWriter(@Value("#{stepExecutionContext[outputFileName]}") String filename) throws Exception {
-        CSVItemWriter itemWriter = new CSVItemWriter();
-        itemWriter.setResource(new FileSystemResource("src/main/resources/output/" + filename));
-        return itemWriter;
+    public FlatFileItemWriter<Employee> itemWriter(@Value("#{stepExecutionContext[outputFileName]}") String filename) throws Exception {
+        Resource resource = new FileSystemResource("src/main/resources/output/" + filename);
+        return new CSVItemWriter(resource);
     }
 
     @Bean
